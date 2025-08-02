@@ -24,7 +24,7 @@ export const WelcomeHeader: React.FC = () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('profiles')
           .select('first_name')
           .eq('id', user.id)

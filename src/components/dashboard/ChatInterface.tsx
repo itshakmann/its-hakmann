@@ -45,7 +45,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory })
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('chat_sessions')
         .insert({
           user_id: user.id,
@@ -65,7 +65,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory })
     if (!autoSaveHistory || !currentSessionId) return;
 
     try {
-      await supabase
+      await (supabase as any)
         .from('chat_messages')
         .insert({
           session_id: currentSessionId,
