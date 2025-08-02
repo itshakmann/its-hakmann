@@ -21,8 +21,10 @@ import {
   User, 
   LogOut, 
   GraduationCap,
-  History
+  History,
+  MessageSquarePlus
 } from 'lucide-react';
+import { FeedbackModal } from './FeedbackModal';
 
 interface DashboardSidebarProps {
   autoSaveHistory: boolean;
@@ -99,6 +101,15 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   onCheckedChange={setAutoSaveHistory}
                 />
               </div>
+              
+              <FeedbackModal 
+                trigger={
+                  <Button variant="ghost" size="sm" className="w-full justify-start h-8 px-2">
+                    <MessageSquarePlus className="h-4 w-4 mr-2" />
+                    Give Feedback
+                  </Button>
+                }
+              />
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
