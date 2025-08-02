@@ -36,19 +36,19 @@ const Dashboard = () => {
         />
         
         <main className="flex-1 flex flex-col relative">
-          {showWelcome ? (
-            <div className="flex-1 flex items-center justify-center">
+          {showWelcome && (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/95 backdrop-blur-sm">
               <WelcomeHeader />
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 gap-6">
-              <ChatInterface 
-                autoSaveHistory={autoSaveHistory} 
-                onStartTyping={() => setShowWelcome(false)}
-              />
-              <AcademicSuggestions />
-            </div>
           )}
+          
+          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 gap-6">
+            <ChatInterface 
+              autoSaveHistory={autoSaveHistory} 
+              onStartTyping={() => setShowWelcome(false)}
+            />
+            <AcademicSuggestions />
+          </div>
         </main>
       </div>
     </SidebarProvider>
