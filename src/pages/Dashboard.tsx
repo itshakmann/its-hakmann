@@ -10,6 +10,7 @@ import { AcademicSuggestions } from '@/components/dashboard/AcademicSuggestions'
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const [autoSaveHistory, setAutoSaveHistory] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   if (loading) {
     return (
@@ -34,13 +35,20 @@ const Dashboard = () => {
           setAutoSaveHistory={setAutoSaveHistory}
         />
         
-        <main className="flex-1 flex flex-col">
-          <WelcomeHeader />
-          
-          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 gap-6">
-            <ChatInterface autoSaveHistory={autoSaveHistory} />
-            <AcademicSuggestions />
-          </div>
+        <main className="flex-1 flex flex-col relative">
+          {showWelcome ? (
+            <div className="flex-1 flex items-center justify-center">
+              <WelcomeHeader />
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 gap-6">
+              <ChatInterface 
+                autoSaveHistory={autoSaveHistory} 
+                onStartTyping={() => setShowWelcome(false)}
+              />
+              <AcademicSuggestions />
+            </div>
+          )}
         </main>
       </div>
     </SidebarProvider>

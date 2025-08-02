@@ -46,32 +46,24 @@ export const WelcomeHeader: React.FC = () => {
   }, [user]);
 
   return (
-    <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border-b border-border">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="bg-primary rounded-full p-4 animate-pulse">
-                <GraduationCap className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <div className="absolute -top-1 -right-1 bg-secondary rounded-full w-4 h-4 animate-bounce"></div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                {greeting}, {firstName}!
-              </h1>
-              <p className="text-muted-foreground">
-                How can I assist you with your academic needs today?
-              </p>
-            </div>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="bg-primary/20 px-3 py-1 rounded-full">
-              <span className="font-medium">CKT-UTAS AI Assistant</span>
-            </div>
-          </div>
+    <div className="text-center animate-fade-in">
+      <div className="relative inline-block mb-6">
+        <div className="bg-primary rounded-full p-8 animate-pulse">
+          <GraduationCap className="h-16 w-16 text-primary-foreground" />
         </div>
+        <div className="absolute -top-2 -right-2 bg-secondary rounded-full w-8 h-8 animate-bounce"></div>
+      </div>
+      
+      <h1 className="text-4xl font-bold text-foreground mb-4">
+        {greeting}, {firstName}!
+      </h1>
+      
+      <p className="text-xl text-muted-foreground mb-6">
+        How can I assist you with your academic needs today?
+      </p>
+      
+      <div className="bg-primary/20 px-4 py-2 rounded-full inline-block">
+        <span className="font-medium text-primary">CKT-UTAS AI Assistant</span>
       </div>
     </div>
   );

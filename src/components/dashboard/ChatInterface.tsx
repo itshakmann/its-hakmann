@@ -16,9 +16,10 @@ interface Message {
 
 interface ChatInterfaceProps {
   autoSaveHistory: boolean;
+  onStartTyping?: () => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, onStartTyping }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -235,7 +236,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory })
         <div className="flex gap-2">
           <Input
             value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
+            onChange={(e) => {
+              setInputMessage(e.target.value);
+              if (e.target.value.length === 1 && onStartTyping) {
+                onStartTyping();
+              }
+            }}
             onKeyPress={handleKeyPress}
             placeholder="Ask me about academic procedures, deadlines, courses..."
             disabled={isLoading}
