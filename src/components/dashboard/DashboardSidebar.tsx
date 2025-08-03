@@ -15,6 +15,12 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   MessageSquare, 
@@ -54,77 +60,109 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className="border-r border-border">
-      <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center gap-2">
-          <div className="bg-primary rounded-lg p-2">
-            <GraduationCap className="h-6 w-6 text-primary-foreground" />
+    <TooltipProvider>
+      <Sidebar className="border-r border-border">
+        <SidebarHeader className="border-b border-border p-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary rounded-lg p-2">
+              <GraduationCap className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">CKT-UTAS</h2>
+              <p className="text-xs text-muted-foreground">Student Assistant</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-semibold text-foreground">CKT-UTAS</h2>
-            <p className="text-xs text-muted-foreground">Student Assistant</p>
-          </div>
-        </div>
-      </SidebarHeader>
+        </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+              <SidebarMenu>
+                {menuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuButton asChild isActive={isActive(item.url)}>
+                          <Link to={item.url} className="flex items-center gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{item.title === 'Chat' ? 'Start a conversation with the AI assistant' : 'View and edit your profile settings'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
           <SidebarGroupLabel>Settings</SidebarGroupLabel>
           <SidebarGroupContent>
-            <div className="px-3 py-2 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="auto-save" className="text-sm flex items-center gap-2">
-                  <History className="h-4 w-4" />
-                  Auto-Save History
-                </Label>
-                <Switch
-                  id="auto-save"
-                  checked={autoSaveHistory}
-                  onCheckedChange={setAutoSaveHistory}
-                />
+              <div className="px-3 py-2 space-y-3">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="auto-save" className="text-sm flex items-center gap-2">
+                        <History className="h-4 w-4" />
+                        Auto-Save History
+                      </Label>
+                      <Switch
+                        id="auto-save"
+                        checked={autoSaveHistory}
+                        onCheckedChange={setAutoSaveHistory}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Automatically save your chat conversations</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <FeedbackModal 
+                        trigger={
+                          <Button variant="ghost" size="sm" className="w-full justify-start h-8 px-2">
+                            <MessageSquarePlus className="h-4 w-4 mr-2" />
+                            Give Feedback
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Send feedback about your experience</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
-              
-              <FeedbackModal 
-                trigger={
-                  <Button variant="ghost" size="sm" className="w-full justify-start h-8 px-2">
-                    <MessageSquarePlus className="h-4 w-4 mr-2" />
-                    Give Feedback
-                  </Button>
-                }
-              />
-            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4">
-        <Button
-          variant="outline"
-          onClick={signOut}
-          className="w-full justify-start"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
-        </Button>
-      </SidebarFooter>
-    </Sidebar>
+        <SidebarFooter className="border-t border-border p-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                onClick={signOut}
+                className="w-full justify-start"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sign out of your account</p>
+            </TooltipContent>
+          </Tooltip>
+        </SidebarFooter>
+      </Sidebar>
+    </TooltipProvider>
   );
 };

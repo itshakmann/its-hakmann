@@ -42,12 +42,20 @@ const Dashboard = () => {
             </div>
           )}
           
-          <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6 gap-6">
-            <ChatInterface 
-              autoSaveHistory={autoSaveHistory} 
-              onStartTyping={() => setShowWelcome(false)}
-            />
-            <AcademicSuggestions />
+          <div className="flex-1 d-flex flex-column container-fluid p-3">
+            <div className="row h-100">
+              <div className="col-12 h-100">
+                <ChatInterface 
+                  autoSaveHistory={autoSaveHistory} 
+                  onStartTyping={() => setShowWelcome(false)}
+                />
+              </div>
+            </div>
+            <div className="row mt-3">
+              <div className="col-12">
+                <AcademicSuggestions />
+              </div>
+            </div>
           </div>
         </main>
       </div>

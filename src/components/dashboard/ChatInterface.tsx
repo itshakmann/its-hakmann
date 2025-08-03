@@ -5,13 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface Message {
   id: string;
   content: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  feedback?: 'up' | 'down' | null;
 }
 
 interface ChatInterfaceProps {
@@ -25,6 +26,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -169,93 +171,135 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
     }
   };
 
+  const handleFeedback = (messageId: string, feedback: 'up' | 'down') => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, feedback } : msg
+    ));
+    setFeedbackMessage('Thanks for your feedback!');
+    setTimeout(() => setFeedbackMessage(null), 3000);
+  };
+
   return (
-    <Card className="flex-1 flex flex-col h-[600px]">
-      <CardContent className="flex-1 flex flex-col p-4">
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-          {messages.length === 0 && (
-            <div className="text-center text-muted-foreground py-8">
-              <Bot className="h-12 w-12 mx-auto mb-4 text-primary" />
-              <p className="text-lg font-medium mb-2">CKT-UTAS AI Assistant</p>
-              <p>Ask me anything about university procedures, deadlines, courses, or academic policies!</p>
-            </div>
-          )}
+    <div className="container-fluid h-100 d-flex flex-column">
+      <Card className="flex-1 d-flex flex-column h-100">
+        <CardContent className="flex-1 d-flex flex-column p-4">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-auto mb-4" style={{ minHeight: '400px' }}>
+            {messages.length === 0 && (
+              <div className="text-center text-muted-foreground py-5">
+                <Bot className="h-12 w-12 mx-auto mb-4 text-primary" />
+                <p className="text-lg font-medium mb-2">CKT-UTAS AI Assistant</p>
+                <p>Ask me anything about university procedures, deadlines, courses, or academic policies!</p>
+              </div>
+            )}
           
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex gap-3 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {message.sender === 'bot' && (
-                <div className="bg-primary rounded-full p-2 h-8 w-8 flex items-center justify-center">
+            {messages.map((message) => (
+              <div key={message.id} className="mb-4">
+                <div className={`d-flex gap-3 ${message.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
+                  {message.sender === 'bot' && (
+                    <div className="bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style={{minWidth: '32px', height: '32px'}}>
+                      <Bot className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                  )}
+                  
+                  <div className="d-flex flex-column" style={{maxWidth: '80%'}}>
+                    <div
+                      className={`rounded-lg p-3 ${
+                        message.sender === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
+                      }`}
+                    >
+                      <p className="mb-0 white-space-pre-wrap">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-1 mb-0">
+                        {message.timestamp.toLocaleTimeString()}
+                      </p>
+                    </div>
+
+                    {/* Feedback buttons for bot messages */}
+                    {message.sender === 'bot' && (
+                      <div className="d-flex gap-2 mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleFeedback(message.id, 'up')}
+                          className={`p-1 ${message.feedback === 'up' ? 'bg-green-100 text-green-600' : ''}`}
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleFeedback(message.id, 'down')}
+                          className={`p-1 ${message.feedback === 'down' ? 'bg-red-100 text-red-600' : ''}`}
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {message.sender === 'user' && (
+                    <div className="bg-secondary rounded-circle p-2 d-flex align-items-center justify-content-center" style={{minWidth: '32px', height: '32px'}}>
+                      <User className="h-4 w-4 text-secondary-foreground" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          
+            {isLoading && (
+              <div className="d-flex gap-3 justify-content-start mb-4">
+                <div className="bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style={{minWidth: '32px', height: '32px'}}>
                   <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
-              )}
-              
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.sender === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString()}
-                </p>
-              </div>
-              
-              {message.sender === 'user' && (
-                <div className="bg-secondary rounded-full p-2 h-8 w-8 flex items-center justify-center">
-                  <User className="h-4 w-4 text-secondary-foreground" />
-                </div>
-              )}
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex gap-3 justify-start">
-              <div className="bg-primary rounded-full p-2 h-8 w-8 flex items-center justify-center">
-                <Bot className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <div className="bg-muted rounded-lg p-3">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-foreground rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="bg-muted rounded-lg p-3">
+                  <div className="d-flex gap-1">
+                    <div className="w-2 h-2 bg-foreground rounded-circle animate-bounce"></div>
+                    <div className="w-2 h-2 bg-foreground rounded-circle animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-foreground rounded-circle animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
                 </div>
               </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Feedback Message */}
+          {feedbackMessage && (
+            <div className="alert alert-success text-center py-2 mb-3" role="alert">
+              {feedbackMessage}
             </div>
           )}
-          
-          <div ref={messagesEndRef} />
-        </div>
 
-        {/* Input Area */}
-        <div className="flex gap-2">
-          <Input
-            value={inputMessage}
-            onChange={(e) => {
-              setInputMessage(e.target.value);
-              if (e.target.value.length === 1 && onStartTyping) {
-                onStartTyping();
-              }
-            }}
-            onKeyPress={handleKeyPress}
-            placeholder="Ask me about academic procedures, deadlines, courses..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!inputMessage.trim() || isLoading}
-            size="icon"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          {/* Fixed Input Area */}
+          <div className="border-top pt-3 mt-auto">
+            <div className="d-flex gap-2">
+              <Input
+                value={inputMessage}
+                onChange={(e) => {
+                  setInputMessage(e.target.value);
+                  if (e.target.value.length === 1 && onStartTyping) {
+                    onStartTyping();
+                  }
+                }}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask me about academic procedures, deadlines, courses..."
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || isLoading}
+                size="icon"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
