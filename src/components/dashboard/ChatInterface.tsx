@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Send, Bot, User, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { findBestFAQMatch, type FAQEntry } from '@/utils/fuzzyMatch';
 
 interface Message {
   id: string;
@@ -92,37 +93,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
         return "I'm sorry, but I don't have any information available in my knowledge base yet. Please contact the administration for assistance.";
       }
 
-      // Simple semantic matching - check if user message contains keywords from FAQ questions
-      const userWords = userMessage.toLowerCase().split(' ');
-      let bestMatch = null;
-      let highestScore = 0;
+      // Convert Supabase data to FAQEntry format
+      const faqEntries: FAQEntry[] = data.map(item => ({
+        question: item.question,
+        answer: item.answer || "No answer available for this question."
+      }));
 
-      for (const faq of data) {
-        const questionWords = faq.question.toLowerCase().split(' ');
-        let score = 0;
+      // Use fuzzy matching to find the best match
+      const matchResult = findBestFAQMatch(userMessage, faqEntries, 70);
 
-        // Calculate similarity score
-        for (const userWord of userWords) {
-          if (userWord.length > 3) { // Only consider words longer than 3 characters
-            for (const questionWord of questionWords) {
-              if (questionWord.includes(userWord) || userWord.includes(questionWord)) {
-                score += 1;
-              }
-            }
-          }
-        }
-
-        if (score > highestScore) {
-          highestScore = score;
-          bestMatch = faq;
-        }
+      if (matchResult) {
+        return matchResult.faq.answer;
       }
 
-      if (bestMatch && highestScore > 0) {
-        return bestMatch.answer;
-      }
-
-      // Fallback response
+      // Fallback response when no good match is found
       return "I couldn't find a specific answer to your question in my knowledge base. Here are some common topics I can help with:\n\n• Academic deadlines and fees\n• Course information\n• Examination and results\n• Registration procedures\n• General university policies\n\nPlease try rephrasing your question or contact the administration directly for more specific information.";
     } catch (error) {
       console.error('Error searching FAQ:', error);
