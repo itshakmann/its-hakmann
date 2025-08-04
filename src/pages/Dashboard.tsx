@@ -37,7 +37,7 @@ const Dashboard = () => {
         
         <main className="flex-1 flex flex-col relative">
           {showWelcome && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/95 backdrop-blur-sm">
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/95 backdrop-blur-sm transition-opacity duration-500 ease-out">
               <WelcomeHeader />
             </div>
           )}
