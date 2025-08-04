@@ -4,13 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { ChatInterface } from '@/components/dashboard/ChatInterface';
-import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
 import { AcademicSuggestions } from '@/components/dashboard/AcademicSuggestions';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const [autoSaveHistory, setAutoSaveHistory] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(true);
 
   if (loading) {
     return (
@@ -36,20 +34,11 @@ const Dashboard = () => {
         />
         
         <main className="flex-1 flex flex-col relative">
-          {showWelcome && (
-            <div className="absolute inset-x-0 top-0 bottom-20 flex items-center justify-center z-10 bg-background/95 backdrop-blur-sm transition-opacity duration-500 ease-out pointer-events-none">
-              <div className="pointer-events-auto">
-                <WelcomeHeader />
-              </div>
-            </div>
-          )}
-          
           <div className="flex-1 d-flex flex-column container-fluid p-3">
             <div className="row h-100">
               <div className="col-12 h-100">
                 <ChatInterface 
                   autoSaveHistory={autoSaveHistory}
-                  onStartTyping={() => setShowWelcome(false)}
                 />
               </div>
             </div>
