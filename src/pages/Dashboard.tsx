@@ -5,12 +5,12 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { ChatInterface } from '@/components/dashboard/ChatInterface';
 import { WelcomeHeader } from '@/components/dashboard/WelcomeHeader';
-import { AcademicSuggestions } from '@/components/dashboard/AcademicSuggestions';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const [autoSaveHistory, setAutoSaveHistory] = useState(true);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -33,6 +33,12 @@ const Dashboard = () => {
         <DashboardSidebar 
           autoSaveHistory={autoSaveHistory}
           setAutoSaveHistory={setAutoSaveHistory}
+          onSessionSelect={setCurrentSessionId}
+          currentSessionId={currentSessionId}
+          onNewChat={() => {
+            setCurrentSessionId(null);
+            setShowWelcome(false);
+          }}
         />
         
         <main className="flex-1 flex flex-col relative">
@@ -50,6 +56,11 @@ const Dashboard = () => {
                 <ChatInterface 
                   autoSaveHistory={autoSaveHistory}
                   onStartTyping={() => setShowWelcome(false)}
+                  sessionId={currentSessionId || undefined}
+                  onNewSession={() => {
+                    setCurrentSessionId(null);
+                    setShowWelcome(false);
+                  }}
                 />
               </div>
             </div>

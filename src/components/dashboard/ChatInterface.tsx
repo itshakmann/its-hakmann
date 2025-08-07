@@ -2,11 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
+import { Send, Bot, User, ThumbsUp, ThumbsDown, Plus, Keyboard, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { findBestFAQMatch, FAQEntry } from '@/utils/fuzzyMatch';
+import { MessageActions } from './MessageActions';
+import { ExportChat } from './ExportChat';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Bot, User, ThumbsUp, ThumbsDown } from 'lucide-react';
-import { findBestFAQMatch, type FAQEntry } from '@/utils/fuzzyMatch';
+import { format } from 'date-fns';
 
 interface Message {
   id: string;
@@ -19,37 +23,112 @@ interface Message {
 interface ChatInterfaceProps {
   autoSaveHistory: boolean;
   onStartTyping?: () => void;
+  sessionId?: string;
+  onNewSession?: () => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, onStartTyping }) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  autoSaveHistory,
+  onStartTyping,
+  sessionId,
+  onNewSession 
+}) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onNewChat: () => {
+      if (onNewSession) {
+        onNewSession();
+      } else {
+        handleNewChat();
+      }
+    },
+    onFocusInput: () => inputRef.current?.focus(),
+    onClearChat: () => handleClearChat(),
+  });
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
-    if (autoSaveHistory && user) {
+    if (sessionId) {
+      loadSessionMessages(sessionId);
+      setCurrentSessionId(sessionId);
+    } else if (autoSaveHistory && user && !currentSessionId) {
       createNewSession();
     }
-  }, [autoSaveHistory, user]);
+  }, [autoSaveHistory, user, sessionId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const loadSessionMessages = async (sessionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const loadedMessages: Message[] = data.map((msg) => ({
+        id: msg.id,
+        content: msg.content,
+        sender: msg.sender as 'user' | 'bot',
+        timestamp: new Date(msg.created_at),
+      }));
+
+      setMessages(loadedMessages);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load chat history",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setCurrentSessionId(null);
+    if (autoSaveHistory && user) {
+      createNewSession();
+    }
+    toast({
+      title: "New Chat",
+      description: "Started a new conversation",
+    });
+  };
+
+  const handleClearChat = () => {
+    if (messages.length === 0) return;
+    
+    setMessages([]);
+    toast({
+      title: "Chat Cleared",
+      description: "All messages have been cleared",
+    });
   };
 
   const createNewSession = async () => {
     if (!user) return;
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('chat_sessions')
         .insert({
           user_id: user.id,
@@ -69,7 +148,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
     if (!autoSaveHistory || !currentSessionId) return;
 
     try {
-      await (supabase as any)
+      await supabase
         .from('chat_messages')
         .insert({
           session_id: currentSessionId,
@@ -93,17 +172,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
         return "I'm sorry, but I don't have any information available in my knowledge base yet. Please contact the administration for assistance.";
       }
 
-      // Convert Supabase data to FAQEntry format
-      const faqEntries: FAQEntry[] = data.map(item => ({
-        question: item.question,
-        answer: item.answer || "No answer available for this question."
-      }));
-
       // Use fuzzy matching to find the best match
-      const matchResult = findBestFAQMatch(userMessage, faqEntries, 70);
+      const matchResult = findBestFAQMatch(userMessage, data as FAQEntry[], 70);
 
       if (matchResult) {
-        return matchResult.faq.answer;
+        return matchResult.faq.answer || "No answer available for this question.";
       }
 
       // Fallback response when no good match is found
@@ -164,9 +237,46 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
   };
 
   return (
-    <div className="container-fluid h-100 d-flex flex-column">
-      <Card className="flex-1 d-flex flex-column h-100">
-        <CardContent className="flex-1 d-flex flex-column p-4">
+    <div className="h-100 d-flex flex-column">
+      <Card className="h-100 d-flex flex-column shadow-sm">
+        {/* Chat Header */}
+        <div className="flex items-center justify-between p-3 border-b">
+          <div className="flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            <span className="font-medium">CKT-UTAS Assistant</span>
+            <span className="text-xs text-muted-foreground">
+              {messages.length > 0 ? `${messages.length} messages` : 'Ready to help'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ExportChat 
+              messages={messages.map(msg => ({
+                ...msg,
+                timestamp: msg.timestamp
+              }))} 
+              sessionTitle={`Chat Session ${format(new Date(), 'PPp')}`}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleNewChat}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              New Chat
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowShortcuts(!showShortcuts)}
+              className="h-8 w-8"
+            >
+              <Keyboard className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <CardContent className="p-3 h-100 d-flex flex-column">
           {/* Messages Area */}
           <div className="flex-1 overflow-auto mb-4" style={{ minHeight: '400px' }}>
             {messages.length === 0 && (
@@ -179,25 +289,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
           
             {messages.map((message) => (
               <div key={message.id} className="mb-4">
-                <div className={`d-flex gap-3 ${message.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
+                <div className="group d-flex gap-3 mb-4" style={{ alignItems: 'flex-start' }}>
                   {message.sender === 'bot' && (
                     <div className="bg-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style={{minWidth: '32px', height: '32px'}}>
                       <Bot className="h-4 w-4 text-primary-foreground" />
                     </div>
                   )}
                   
-                  <div className="d-flex flex-column" style={{maxWidth: '80%'}}>
-                    <div
-                      className={`rounded-lg p-3 ${
-                        message.sender === 'user'
-                          ? 'bg-primary text-primary-foreground'
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className={`rounded-lg p-3 ${
+                        message.sender === 'user' 
+                          ? 'bg-primary text-primary-foreground ml-auto' 
                           : 'bg-muted text-foreground'
-                      }`}
-                    >
-                      <p className="mb-0 white-space-pre-wrap">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1 mb-0">
-                        {message.timestamp.toLocaleTimeString()}
-                      </p>
+                      }`} style={{ maxWidth: message.sender === 'user' ? '70%' : '85%', marginLeft: message.sender === 'user' ? 'auto' : '0' }}>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {message.content}
+                        </p>
+                        <div className="text-xs mt-2 opacity-70">
+                          {format(message.timestamp, 'HH:mm')}
+                        </div>
+                      </div>
+                      
+                      {message.sender === 'bot' && (
+                        <MessageActions 
+                          message={message.content}
+                          messageId={message.id}
+                        />
+                      )}
                     </div>
 
                     {/* Feedback buttons for bot messages */}
@@ -261,6 +380,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
           <div className="border-top pt-3 mt-auto">
             <div className="d-flex gap-2">
               <Input
+                ref={inputRef}
                 value={inputMessage}
                 onChange={(e) => {
                   setInputMessage(e.target.value);
@@ -281,6 +401,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({ autoSaveHistory, o
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            
+            {/* Keyboard Shortcuts Help */}
+            {showShortcuts && (
+              <div className="mt-2 p-3 bg-muted rounded-lg">
+                <div className="text-sm font-medium mb-2">Keyboard Shortcuts</div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div>⌘/Ctrl + N - New chat</div>
+                  <div>⌘/Ctrl + K - Focus input</div>
+                  <div>⌘/Ctrl + ⇧ + Del - Clear chat</div>
+                  <div>Esc - Focus input</div>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

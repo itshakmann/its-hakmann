@@ -28,18 +28,27 @@ import {
   LogOut, 
   GraduationCap,
   History,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Clock
 } from 'lucide-react';
 import { FeedbackModal } from './FeedbackModal';
+import { SessionHistory } from './SessionHistory';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 interface DashboardSidebarProps {
   autoSaveHistory: boolean;
   setAutoSaveHistory: (value: boolean) => void;
+  onSessionSelect?: (sessionId: string) => void;
+  currentSessionId?: string;
+  onNewChat?: () => void;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   autoSaveHistory,
-  setAutoSaveHistory
+  setAutoSaveHistory,
+  onSessionSelect,
+  currentSessionId,
+  onNewChat
 }) => {
   const { signOut } = useAuth();
   const location = useLocation();
@@ -100,6 +109,21 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {onSessionSelect && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Chat History
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SessionHistory 
+                onSessionSelect={onSessionSelect}
+                currentSessionId={currentSessionId}
+              />
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         <SidebarGroup>
           <SidebarGroupLabel>Settings</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -140,6 +164,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     <p>Send feedback about your experience</p>
                   </TooltipContent>
                 </Tooltip>
+
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Theme</Label>
+                  <ThemeToggle />
+                </div>
               </div>
           </SidebarGroupContent>
         </SidebarGroup>
