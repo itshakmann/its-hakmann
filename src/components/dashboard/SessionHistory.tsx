@@ -7,16 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Search, 
   MessageSquare, 
-  Trash2, 
-  Calendar,
-  Filter
+  Trash2
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -41,7 +33,6 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<ChatSession[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterPeriod, setFilterPeriod] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +43,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
 
   useEffect(() => {
     filterSessions();
-  }, [sessions, searchQuery, filterPeriod]);
+  }, [sessions, searchQuery]);
 
   const fetchSessions = async () => {
     try {
@@ -83,28 +74,6 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
     if (searchQuery) {
       filtered = filtered.filter(session =>
         session.title.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply time filter
-    if (filterPeriod !== 'all') {
-      const now = new Date();
-      const cutoff = new Date();
-      
-      switch (filterPeriod) {
-        case 'today':
-          cutoff.setHours(0, 0, 0, 0);
-          break;
-        case 'week':
-          cutoff.setDate(now.getDate() - 7);
-          break;
-        case 'month':
-          cutoff.setMonth(now.getMonth() - 1);
-          break;
-      }
-      
-      filtered = filtered.filter(session =>
-        new Date(session.updated_at) >= cutoff
       );
     }
 
@@ -148,46 +117,15 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Search and Filter */}
-      <div className="space-y-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="w-full justify-start">
-              <Filter className="h-4 w-4 mr-2" />
-              {filterPeriod === 'all' ? 'All time' : 
-               filterPeriod === 'today' ? 'Today' :
-               filterPeriod === 'week' ? 'This week' : 'This month'}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuItem onClick={() => setFilterPeriod('all')}>
-              <Calendar className="h-4 w-4 mr-2" />
-              All time
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterPeriod('today')}>
-              <Calendar className="h-4 w-4 mr-2" />
-              Today
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterPeriod('week')}>
-              <Calendar className="h-4 w-4 mr-2" />
-              This week
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setFilterPeriod('month')}>
-              <Calendar className="h-4 w-4 mr-2" />
-              This month
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search conversations..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9"
+        />
       </div>
 
       {/* Sessions List */}

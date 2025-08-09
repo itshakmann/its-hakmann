@@ -39,6 +39,10 @@ const Dashboard = () => {
             setCurrentSessionId(null);
             setShowWelcome(false);
           }}
+          onTemplateSelect={(prompt) => {
+            setCurrentSessionId(null);
+            setShowWelcome(false);
+          }}
         />
         
         <main className="flex-1 flex flex-col relative">

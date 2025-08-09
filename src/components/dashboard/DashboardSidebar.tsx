@@ -33,7 +33,10 @@ import {
 } from 'lucide-react';
 import { FeedbackModal } from './FeedbackModal';
 import { SessionHistory } from './SessionHistory';
+import { ChatStats } from './ChatStats';
+import { ChatTemplates } from './ChatTemplates';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface DashboardSidebarProps {
   autoSaveHistory: boolean;
@@ -41,6 +44,7 @@ interface DashboardSidebarProps {
   onSessionSelect?: (sessionId: string) => void;
   currentSessionId?: string;
   onNewChat?: () => void;
+  onTemplateSelect?: (prompt: string) => void;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
@@ -48,7 +52,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   setAutoSaveHistory,
   onSessionSelect,
   currentSessionId,
-  onNewChat
+  onNewChat,
+  onTemplateSelect
 }) => {
   const { signOut } = useAuth();
   const location = useLocation();
@@ -113,13 +118,30 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <SidebarGroup>
             <SidebarGroupLabel className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Chat History
+              AI Assistant
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SessionHistory 
-                onSessionSelect={onSessionSelect}
-                currentSessionId={currentSessionId}
-              />
+              <Tabs defaultValue="history" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+                  <TabsTrigger value="templates" className="text-xs">Templates</TabsTrigger>
+                  <TabsTrigger value="stats" className="text-xs">Stats</TabsTrigger>
+                </TabsList>
+                <TabsContent value="history" className="mt-0">
+                  <SessionHistory 
+                    onSessionSelect={onSessionSelect}
+                    currentSessionId={currentSessionId}
+                  />
+                </TabsContent>
+                <TabsContent value="templates" className="mt-0">
+                  {onTemplateSelect && (
+                    <ChatTemplates onTemplateSelect={onTemplateSelect} />
+                  )}
+                </TabsContent>
+                <TabsContent value="stats" className="mt-0">
+                  <ChatStats />
+                </TabsContent>
+              </Tabs>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
