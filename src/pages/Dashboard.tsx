@@ -47,7 +47,7 @@ const Dashboard = () => {
         
         <main className="flex-1 flex flex-col relative">
           {showWelcome && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/95 backdrop-blur-sm pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 bottom-28 md:bottom-32 flex items-center justify-center z-10 bg-background/80 backdrop-blur-sm pointer-events-none">
               <div className="pointer-events-auto w-full">
                 <WelcomeHeader />
               </div>

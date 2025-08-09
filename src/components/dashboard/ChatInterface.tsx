@@ -237,7 +237,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="h-100 d-flex flex-column">
+    <div className="h-100 d-flex flex-column" data-chat-interface>
       <Card className="h-100 d-flex flex-column shadow-sm">
         {/* Chat Header */}
         <div className="flex items-center justify-between p-3 border-b">
@@ -377,7 +377,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           )}
 
           {/* Fixed Input Area */}
-          <div className="border-top pt-3 mt-auto">
+          <div className="border-top pt-3 mt-auto relative z-20 bg-background">
             <div className="d-flex gap-2">
               <Input
                 ref={inputRef}
